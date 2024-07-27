@@ -22,5 +22,3 @@ files:
   subfolders:
     thumbnails: "/thumbnails"
     originals: "/originals"
-server:
-  port: 8081

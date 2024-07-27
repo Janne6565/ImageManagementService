@@ -33,6 +33,9 @@ public class TestController {
 
     @GetMapping("/image/{id}")
     public ResponseEntity<ImageLinkDto> getImage(@PathVariable String id) {
+        if (!imageService.doesImageExist(id)) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(imageService.getImage(id));
     }
 }

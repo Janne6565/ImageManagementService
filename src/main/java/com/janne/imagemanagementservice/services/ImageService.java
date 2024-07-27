@@ -46,4 +46,11 @@ public class ImageService {
                 .thumbnailUrl(pathBuilder.buildPathThumbnail(id).toString())
                 .build();
     }
+
+    public boolean doesImageExist(String id) {
+        if (!imageRepository.existsById(id)) {
+            return false;
+        }
+        return fileService.doesImageExist(id);
+    }
 }
