@@ -4,6 +4,8 @@ import com.janne.imagemanagementservice.exceptions.CorruptedImagesException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FileService {
 
+    private static final Logger log = LoggerFactory.getLogger(FileService.class);
     private final PathBuilder pathBuilder;
     private final ImageUtilityService imageUtilityService;
     @Value("${files.upload-extension}")
@@ -67,9 +70,14 @@ public class FileService {
 
         try {
             Files.deleteIfExists(originalPath);
+        } catch (IOException e) {
+            log.debug("cant delete original for image: {}", id);
+        }
+
+        try {
             Files.deleteIfExists(thumbnailPath);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.debug("cant delete thumbnail for image: {}", id);
         }
     }
 
@@ -131,12 +139,14 @@ public class FileService {
      * - don't have an original image
      * - don't have a thumbnail image
      * - can't be read as images
-     *
-     * @return if at least one image was deleted
      */
-    public boolean cleanupFiles() {
+    public void cleanupFiles() {
         try {
             for (Path path : Files.newDirectoryStream(pathBuilder.getThumbnailDirectory())) {
+                if (!path.toFile().isFile()) {
+                    continue;
+                }
+
                 String id = pathBuilder.getIdFromThumbnailPath(path.toString());
                 if (isImageInvalid(id)) {
                     deleteImage(id);
@@ -144,6 +154,10 @@ public class FileService {
             }
 
             for (Path path : Files.newDirectoryStream(pathBuilder.getOriginalDirectory())) {
+                if (!path.toFile().isFile()) {
+                    continue;
+                }
+
                 String id = pathBuilder.getIdFromOriginalPath(path.toString());
                 if (isImageInvalid(id)) {
                     deleteImage(id);
@@ -152,6 +166,5 @@ public class FileService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return false;
     }
 }
