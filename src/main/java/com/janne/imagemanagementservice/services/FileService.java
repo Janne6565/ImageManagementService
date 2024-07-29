@@ -1,9 +1,9 @@
 package com.janne.imagemanagementservice.services;
 
 import com.janne.imagemanagementservice.exceptions.CorruptedImagesException;
-import com.janne.imagemanagementservice.model.jpa.ScaledImage;
-import com.janne.imagemanagementservice.repository.ImageRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public class FileService {
     @Value("${files.upload-extension}")
     private String imageExtension;
 
-    public boolean doesImageExist(String id) {
+    public boolean doesImageExist(String id) throws CorruptedImagesException {
         Path originalPath = pathBuilder.buildPathOriginal(id);
         Path thumbnailPath = pathBuilder.buildPathThumbnail(id);
         boolean originalExists = Files.exists(originalPath) && Files.isRegularFile(originalPath);
@@ -72,8 +73,16 @@ public class FileService {
         }
     }
 
+    private BufferedImage optimizeImage(BufferedImage image) throws IOException {
+        return Thumbnails.of(image)
+                .outputQuality(0.7)
+                .scale(1)
+                .asBufferedImage();
+    }
 
+    @SneakyThrows
     public void uploadImage(BufferedImage image, String id) {
+        image = optimizeImage(image);
         Path pathOriginal = pathBuilder.buildPathOriginal(id);
         Path pathThumbnail = pathBuilder.buildPathThumbnail(id);
         File originalFile = pathOriginal.toFile();
@@ -90,4 +99,59 @@ public class FileService {
         }
     }
 
+    /**
+     * This methode does not check if the images are valid and just returns all original ImageIds in the directory
+     *
+     * @return List of all IDs from existing Images which could be found in the "original" image directory
+     */
+    public List<String> getAllImageIds() {
+        try {
+            return Files.list(pathBuilder.getOriginalDirectory())
+                    .map(path -> pathBuilder.getIdFromOriginalPath(path.toString()))
+                    .toList();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean isImageInvalid(String id) {
+        try {
+            Path originalPath = pathBuilder.buildPathOriginal(id);
+            Path thumbnailPath = pathBuilder.buildPathThumbnail(id);
+            BufferedImage originalImage = ImageIO.read(originalPath.toFile());
+            BufferedImage thumbnailImage = ImageIO.read(thumbnailPath.toFile());
+            return originalImage == null || thumbnailImage == null;
+        } catch (IOException e) {
+            return true;
+        }
+    }
+
+    /**
+     * delete all files locally which either:
+     * - don't have an original image
+     * - don't have a thumbnail image
+     * - can't be read as images
+     *
+     * @return if at least one image was deleted
+     */
+    public boolean cleanupFiles() {
+        try {
+            for (Path path : Files.newDirectoryStream(pathBuilder.getThumbnailDirectory())) {
+                String id = pathBuilder.getIdFromThumbnailPath(path.toString());
+                if (isImageInvalid(id)) {
+                    deleteImage(id);
+                }
+            }
+
+            for (Path path : Files.newDirectoryStream(pathBuilder.getOriginalDirectory())) {
+                String id = pathBuilder.getIdFromOriginalPath(path.toString());
+                if (isImageInvalid(id)) {
+                    deleteImage(id);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return false;
+    }
 }

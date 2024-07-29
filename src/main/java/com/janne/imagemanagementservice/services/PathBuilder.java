@@ -7,4 +7,6 @@ public interface PathBuilder {
     Path buildPathOriginal(String id);
     Path getThumbnailDirectory();
     Path getOriginalDirectory();
+    String getIdFromThumbnailPath(String path);
+    String getIdFromOriginalPath(String path);
 }

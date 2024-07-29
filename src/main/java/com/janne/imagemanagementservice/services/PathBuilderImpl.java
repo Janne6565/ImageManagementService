@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +39,16 @@ public class PathBuilderImpl implements PathBuilder {
     @Override
     public Path getOriginalDirectory() {
         return Path.of(baseDirectory + originalDirectory + "/");
+    }
+
+    @Override
+    public String getIdFromThumbnailPath(String path) {
+        return Arrays.stream(Arrays.stream(path.split("/")).toList().getLast().split("\\.")).toList().getFirst();
+    }
+
+    @Override
+    public String getIdFromOriginalPath(String path) {
+        return Arrays.stream(Arrays.stream(path.split("/")).toList().getLast().split("\\.")).toList().getFirst();
     }
 
 

@@ -1,7 +1,9 @@
 package com.janne.imagemanagementservice.model.jpa;
 
+import com.janne.imagemanagementservice.model.util.ImageContentFormat;
 import jakarta.persistence.*;
 import lombok.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.sql.Time;
 import java.util.Date;
@@ -17,6 +19,9 @@ public class ScaledImage {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    @NonNull
+    @NotNull
     private Time uploadedAt;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private ImageContentFormat format;
 }

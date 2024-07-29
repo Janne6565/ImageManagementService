@@ -1,5 +1,6 @@
 package com.janne.imagemanagementservice.services;
 
+import com.janne.imagemanagementservice.model.util.ImageContentFormat;
 import org.springframework.stereotype.Service;
 
 import java.awt.image.BufferedImage;
@@ -17,6 +18,10 @@ public class ImageUtilityService {
        int width = (int) (image.getWidth() * scale);
        int height = (int) (image.getHeight() * scale);
          return scaleImage(image, width, height);
+    }
+
+    public BufferedImage scaleImage(BufferedImage image, ImageContentFormat format) {
+        return scaleImage(image, format.getWidth(), format.getHeight());
     }
 
 }
