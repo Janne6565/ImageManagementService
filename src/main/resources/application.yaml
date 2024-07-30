@@ -16,6 +16,8 @@ spring:
     show-sql: true
     database-platform: org.hibernate.dialect.H2Dialect
     database: h2
+authorization:
+  tokenHash: "$2y$10$Dw.wCpa.TEkG4OwmgfuU5e4xWIgQXtyJEFipZF0GoTcZhzK.4R5bC"
 files:
   base-directory: "/img_upload/images"
   upload-extension: "webp"
