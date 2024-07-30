@@ -2,10 +2,7 @@ name: Maven Unit Test
 on:
   push:
     branches:
-      - master
-      - main
-      - 'releases/*'
-      - 'feature/*'
+      - '**'
 jobs:
   mvn-clean-test:
     runs-on: ubuntu-latest
