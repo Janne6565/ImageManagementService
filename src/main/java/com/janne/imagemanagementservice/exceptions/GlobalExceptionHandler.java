@@ -4,13 +4,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.WebRequest;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadUploadException.class)
-    public ResponseEntity<ExceptionResponse> badUploadHandler(BadUploadException exception, WebRequest request) {
+    public ResponseEntity<ExceptionResponse> badUploadHandler(BadUploadException exception) {
         return ResponseEntity.badRequest().body(
                 ExceptionResponse.builder()
                         .code(HttpStatus.BAD_REQUEST.value())
@@ -21,7 +20,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(RequestException.class)
-    public ResponseEntity<ExceptionResponse> globalExceptionHandler(RequestException exception, WebRequest request) {
+    public ResponseEntity<ExceptionResponse> globalExceptionHandler(RequestException exception) {
         return ResponseEntity.status(exception.getCode()).body(
                 ExceptionResponse.builder()
                         .code(exception.getCode())
