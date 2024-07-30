@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -98,8 +99,8 @@ public class FileService {
         BufferedImage downscaledImage = imageUtilityService.scaleImage(image, 0.3f);
 
         try {
-            originalFile.createNewFile();
-            thumbnailFile.createNewFile();
+            assert !originalFile.createNewFile() : "Original file already exists";
+            assert !thumbnailFile.createNewFile() : "Thumbnail file already exists";
             ImageIO.write(image, imageExtension, originalFile);
             ImageIO.write(downscaledImage, imageExtension, thumbnailFile);
         } catch (IOException e) {
@@ -114,9 +115,10 @@ public class FileService {
      */
     public List<String> getAllImageIds() {
         try {
-            return Files.list(pathBuilder.getOriginalDirectory())
-                    .map(path -> pathBuilder.getIdFromOriginalPath(path.toString()))
-                    .toList();
+            try (Stream<Path> paths = Files.list(pathBuilder.getOriginalDirectory())) {
+                return paths.map(path -> pathBuilder.getIdFromOriginalPath(path.toString()))
+                        .toList();
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -142,26 +144,25 @@ public class FileService {
      */
     public void cleanupFiles() {
         try {
-            for (Path path : Files.newDirectoryStream(pathBuilder.getThumbnailDirectory())) {
-                if (!path.toFile().isFile()) {
-                    continue;
-                }
-
-                String id = pathBuilder.getIdFromThumbnailPath(path.toString());
-                if (isImageInvalid(id)) {
-                    deleteImage(id);
-                }
+            try (Stream<Path> paths = Files.list(pathBuilder.getOriginalDirectory())) {
+                paths.forEach(path -> {
+                    String id = pathBuilder.getIdFromOriginalPath(path.toString());
+                    if (isImageInvalid(id)) {
+                        deleteImage(id);
+                    }
+                });
             }
 
-            for (Path path : Files.newDirectoryStream(pathBuilder.getOriginalDirectory())) {
-                if (!path.toFile().isFile()) {
-                    continue;
-                }
-
-                String id = pathBuilder.getIdFromOriginalPath(path.toString());
-                if (isImageInvalid(id)) {
-                    deleteImage(id);
-                }
+            try (Stream<Path> paths = Files.list(pathBuilder.getOriginalDirectory())) {
+                paths.forEach(path -> {
+                    if (!path.toFile().isFile()) {
+                        return;
+                    }
+                    String id = pathBuilder.getIdFromOriginalPath(path.toString());
+                    if (isImageInvalid(id)) {
+                        deleteImage(id);
+                    }
+                });
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
