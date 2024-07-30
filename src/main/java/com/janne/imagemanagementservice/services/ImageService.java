@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.awt.image.BufferedImage;
+import java.io.FileNotFoundException;
 import java.sql.Time;
 import java.util.Date;
 import java.util.HashSet;
@@ -32,7 +33,10 @@ public class ImageService {
         fileService.createDirectory(pathBuilder.getOriginalDirectory().toString());
     }
 
-    public void deleteImage(String id) {
+    public void deleteImage(String id) throws FileNotFoundException {
+        if (!doesImageExist(id)) {
+            throw new FileNotFoundException("Image with id " + id + " not found");
+        }
         fileService.deleteImage(id);
         imageRepository.deleteById(id);
     }

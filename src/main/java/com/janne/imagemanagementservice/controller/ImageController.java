@@ -1,17 +1,20 @@
 package com.janne.imagemanagementservice.controller;
 
+import com.janne.imagemanagementservice.exceptions.RequestException;
 import com.janne.imagemanagementservice.model.dto.ImageLinkDto;
 import com.janne.imagemanagementservice.model.jpa.ScaledImage;
 import com.janne.imagemanagementservice.model.util.ImageContentFormat;
 import com.janne.imagemanagementservice.services.ImageService;
 import com.janne.imagemanagementservice.services.ImageValidationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 @RestController
@@ -40,5 +43,22 @@ public class ImageController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(imageService.getImage(id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteImage(@PathVariable String id) {
+        if (!imageService.doesImageExist(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            imageService.deleteImage(id);
+            return ResponseEntity.ok(id);
+        } catch (FileNotFoundException e) {
+            throw RequestException.builder()
+                    .code(HttpStatus.NOT_FOUND.value())
+                    .message("Requested image not found")
+                    .reason("No image with id: " + id)
+                    .build();
+        }
     }
 }

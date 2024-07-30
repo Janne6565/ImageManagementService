@@ -19,4 +19,15 @@ public class GlobalExceptionHandler {
                         .build()
         );
     }
+
+    @ExceptionHandler(RequestException.class)
+    public ResponseEntity<ExceptionResponse> globalExceptionHandler(RequestException exception, WebRequest request) {
+        return ResponseEntity.status(exception.getCode()).body(
+                ExceptionResponse.builder()
+                        .code(exception.getCode())
+                        .message(exception.getMessage())
+                        .reason(exception.getReason())
+                        .build()
+        );
+    }
 }
