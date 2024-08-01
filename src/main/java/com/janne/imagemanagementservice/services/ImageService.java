@@ -12,8 +12,6 @@ import org.springframework.stereotype.Service;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -78,19 +76,16 @@ public class ImageService {
      */
     @Scheduled(fixedRate = 1, timeUnit = TimeUnit.MINUTES)
     public void cleanupImages() {
-        Set<String> inDatabaseExistingIds = new HashSet<>(
-                imageRepository.findAll().stream().map(ScaledImage::getId).toList()
-        );
         fileService.cleanupFiles();
 
-        for (String id : inDatabaseExistingIds) {
-            if (fileService.isImageInvalid(id)) {
-                imageRepository.deleteById(id);
+        imageRepository.findAll().forEach(image -> {
+            if (fileService.isImageInvalid(image.getId())) {
+                imageRepository.deleteById(image.getId());
             }
-        }
+        });
 
         for (String id : fileService.getAllImageIds()) {
-            if (!inDatabaseExistingIds.contains(id)) {
+            if (!imageRepository.existsById(id)) {
                 fileService.deleteImage(id);
             }
         }
