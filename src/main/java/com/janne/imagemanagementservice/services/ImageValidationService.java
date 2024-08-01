@@ -24,7 +24,7 @@ public class ImageValidationService {
 
     @PostConstruct
     private void init() {
-        acceptedFileTypes = new HashSet<>(Arrays.stream(validFileTypes.split(",")).toList());
+        acceptedFileTypes = new HashSet<>(Arrays.stream(validFileTypes.split(", ")).toList());
     }
 
     private String isFormatValid(MultipartFile multipartFile) {

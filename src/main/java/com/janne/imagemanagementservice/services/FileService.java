@@ -1,6 +1,7 @@
 package com.janne.imagemanagementservice.services;
 
 import com.janne.imagemanagementservice.exceptions.CorruptedImagesException;
+import com.janne.imagemanagementservice.model.dto.ImageLinkDto;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import net.coobird.thumbnailator.Thumbnails;
@@ -90,7 +91,7 @@ public class FileService {
     }
 
     @SneakyThrows
-    public void uploadImage(BufferedImage image, String id) {
+    public ImageLinkDto uploadImage(BufferedImage image, String id) {
         image = optimizeImage(image);
         Path pathOriginal = pathBuilder.buildPathOriginal(id);
         Path pathThumbnail = pathBuilder.buildPathThumbnail(id);
@@ -103,6 +104,10 @@ public class FileService {
             assert !thumbnailFile.createNewFile() : "Thumbnail file already exists";
             ImageIO.write(image, imageExtension, originalFile);
             ImageIO.write(downscaledImage, imageExtension, thumbnailFile);
+            return ImageLinkDto.builder()
+                    .fullSizeUrl(pathOriginal.toString())
+                    .thumbnailUrl(pathThumbnail.toString())
+                    .build();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -144,9 +149,9 @@ public class FileService {
      */
     public void cleanupFiles() {
         try {
-            try (Stream<Path> paths = Files.list(pathBuilder.getOriginalDirectory())) {
+            try (Stream<Path> paths = Files.list(pathBuilder.getThumbnailDirectory())) {
                 paths.forEach(path -> {
-                    String id = pathBuilder.getIdFromOriginalPath(path.toString());
+                    String id = pathBuilder.getIdFromThumbnailPath(path.toString());
                     if (isImageInvalid(id)) {
                         deleteImage(id);
                     }
@@ -155,9 +160,6 @@ public class FileService {
 
             try (Stream<Path> paths = Files.list(pathBuilder.getOriginalDirectory())) {
                 paths.forEach(path -> {
-                    if (!path.toFile().isFile()) {
-                        return;
-                    }
                     String id = pathBuilder.getIdFromOriginalPath(path.toString());
                     if (isImageInvalid(id)) {
                         deleteImage(id);

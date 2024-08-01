@@ -41,7 +41,7 @@ public class ImageService {
         imageRepository.deleteById(id);
     }
 
-    public ScaledImage uploadImage(BufferedImage image, ImageContentFormat format) {
+    public ImageLinkDto uploadImage(BufferedImage image, ImageContentFormat format) {
         BufferedImage baseImage = imageUtilityService.scaleImage(image, format);
         ScaledImage scaledImage = imageRepository.save(ScaledImage.builder()
                 .uploadedAt(new Time(new Date().getTime()))
@@ -49,8 +49,9 @@ public class ImageService {
                 .build());
 
 
-        fileService.uploadImage(baseImage, scaledImage.getId());
-        return scaledImage;
+        ImageLinkDto imageLinkDto = fileService.uploadImage(baseImage, scaledImage.getId());
+        imageLinkDto.setFormat(format);
+        return imageLinkDto;
     }
 
     public ImageLinkDto getImage(String id) {
@@ -76,7 +77,7 @@ public class ImageService {
      * Removes all Images from the persistent datasource which don't exist locally
      * and deletes all local images that don't exist in the database
      */
-    @Scheduled(fixedRate = 1, timeUnit = TimeUnit.HOURS)
+    @Scheduled(fixedRate = 1, timeUnit = TimeUnit.MINUTES)
     public void cleanupImages() {
         Set<String> inDatabaseExistingIds = new HashSet<>(imageRepository.findAll().stream().map(ScaledImage::getId).toList());
         fileService.cleanupFiles();
