@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
-import java.sql.Time;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -44,7 +43,7 @@ public class ImageService {
     public ImageLinkDto uploadImage(BufferedImage image, ImageContentFormat format) {
         BufferedImage baseImage = imageUtilityService.scaleImage(image, format);
         ScaledImage scaledImage = imageRepository.save(ScaledImage.builder()
-                .uploadedAt(new Time(new Date().getTime()))
+                .uploadedAt(new Date())
                 .format(format)
                 .build());
 

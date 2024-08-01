@@ -104,9 +104,14 @@ public class FileService {
             assert !thumbnailFile.createNewFile() : "Thumbnail file already exists";
             ImageIO.write(image, imageExtension, originalFile);
             ImageIO.write(downscaledImage, imageExtension, thumbnailFile);
+
+            Path relativePathOriginals = pathBuilder.getBaseDirectory().relativize(pathOriginal);
+            Path relativePathThumbnails = pathBuilder.getBaseDirectory().relativize(pathThumbnail);
+
             return ImageLinkDto.builder()
-                    .fullSizeUrl(pathOriginal.toString())
-                    .thumbnailUrl(pathThumbnail.toString())
+                    .id(id)
+                    .fullSizeUrl("/" + relativePathOriginals)
+                    .thumbnailUrl("/" + relativePathThumbnails)
                     .build();
         } catch (IOException e) {
             throw new RuntimeException(e);
