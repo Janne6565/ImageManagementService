@@ -2,7 +2,6 @@ package com.janne.imagemanagementservice.controller;
 
 import com.janne.imagemanagementservice.exceptions.RequestException;
 import com.janne.imagemanagementservice.model.dto.ImageLinkDto;
-import com.janne.imagemanagementservice.model.jpa.ScaledImage;
 import com.janne.imagemanagementservice.model.util.ImageContentFormat;
 import com.janne.imagemanagementservice.services.ImageService;
 import com.janne.imagemanagementservice.services.ImageValidationService;
@@ -26,12 +25,11 @@ public class ImageController {
     private final ImageValidationService imageValidationService;
 
     @PostMapping
-    public ResponseEntity<ScaledImage> uploadImage(@RequestParam("image") MultipartFile file, @RequestParam("format") ImageContentFormat format) {
+    public ResponseEntity<ImageLinkDto> uploadImage(@RequestParam("image") MultipartFile file, @RequestParam("format") ImageContentFormat format) {
         imageValidationService.validateImage(file);
         try {
             BufferedImage image = ImageIO.read(file.getInputStream());
-            ScaledImage scaledImage = imageService.uploadImage(image, format);
-            return ResponseEntity.ok(scaledImage);
+            return ResponseEntity.ok(imageService.uploadImage(image, format));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
