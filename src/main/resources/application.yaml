@@ -23,7 +23,7 @@ files:
   upload-extension: "webp"
   validation:
     file-types: "image/png, image/jpg, image/jpeg, image/webp, image/gif"
-    max-file-size: 20_000_000 # in bytes
+    max-file-size: 30_000_000 # in bytes
   subfolders:
     thumbnails: "/thumbnails"
     originals: "/originals"
