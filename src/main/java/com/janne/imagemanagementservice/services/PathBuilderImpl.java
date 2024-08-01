@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +32,7 @@ public class PathBuilderImpl implements PathBuilder {
 
     @Override
     public Path getThumbnailDirectory() {
-       return Path.of(baseDirectory + thumbnailDirectory + "/");
+        return Path.of(baseDirectory + thumbnailDirectory + "/");
     }
 
     @Override
@@ -49,6 +48,11 @@ public class PathBuilderImpl implements PathBuilder {
     @Override
     public String getIdFromOriginalPath(String path) {
         return Arrays.stream(Arrays.stream(path.split("/")).toList().getLast().split("\\.")).toList().getFirst();
+    }
+
+    @Override
+    public Path getBaseDirectory() {
+        return Path.of(baseDirectory);
     }
 
 

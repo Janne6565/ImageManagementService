@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.sql.Time;
 import java.util.Date;
 
 @Builder
@@ -20,7 +19,7 @@ public class ScaledImage {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     @NotNull
-    private Time uploadedAt;
+    private Date uploadedAt;
     @NotNull
     @Enumerated(EnumType.STRING)
     private ImageContentFormat format;
