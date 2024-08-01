@@ -78,7 +78,9 @@ public class ImageService {
      */
     @Scheduled(fixedRate = 1, timeUnit = TimeUnit.MINUTES)
     public void cleanupImages() {
-        Set<String> inDatabaseExistingIds = new HashSet<>(imageRepository.findAll().stream().map(ScaledImage::getId).toList());
+        Set<String> inDatabaseExistingIds = new HashSet<>(
+                imageRepository.findAll().stream().map(ScaledImage::getId).toList()
+        );
         fileService.cleanupFiles();
 
         for (String id : inDatabaseExistingIds) {
