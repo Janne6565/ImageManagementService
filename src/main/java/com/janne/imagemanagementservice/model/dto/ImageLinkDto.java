@@ -14,5 +14,6 @@ public class ImageLinkDto {
     private String id;
     private String fullSizeUrl;
     private String thumbnailUrl;
+    private String blurredUrl;
     private ImageContentFormat format;
 }

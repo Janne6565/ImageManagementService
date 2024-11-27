@@ -27,3 +27,4 @@ files:
   subfolders:
     thumbnails: "/thumbnails"
     originals: "/originals"
+    blurred: "/blurred"

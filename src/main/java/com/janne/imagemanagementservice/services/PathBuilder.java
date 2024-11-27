@@ -7,13 +7,20 @@ public interface PathBuilder {
 
     Path buildPathOriginal(String id);
 
+    Path buildPathBlurred(String id);
+
     Path getThumbnailDirectory();
 
     Path getOriginalDirectory();
+
+    Path getBlurredDirectory();
 
     String getIdFromThumbnailPath(String path);
 
     String getIdFromOriginalPath(String path);
 
+    String getIdFromBlurredPath(String path);
+
     Path getBaseDirectory();
+
 }

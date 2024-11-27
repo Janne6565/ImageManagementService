@@ -95,24 +95,35 @@ public class FileService {
         image = optimizeImage(image);
         Path pathOriginal = pathBuilder.buildPathOriginal(id);
         Path pathThumbnail = pathBuilder.buildPathThumbnail(id);
+        Path pathBlurred = pathBuilder.buildPathBlurred(id);
+
         File originalFile = pathOriginal.toFile();
         File thumbnailFile = pathThumbnail.toFile();
+        File blurredFile = pathBlurred.toFile();
+
         BufferedImage downscaledImage = imageUtilityService.scaleImage(image, 0.3f);
+        BufferedImage blurredImage = imageUtilityService.scaleImage(image, 0.1f);
 
         try {
             assert !originalFile.createNewFile() : "Original file already exists";
             assert !thumbnailFile.createNewFile() : "Thumbnail file already exists";
+            assert !blurredFile.createNewFile() : "Blurred file already exists";
+
             ImageIO.write(image, imageExtension, originalFile);
             ImageIO.write(downscaledImage, imageExtension, thumbnailFile);
+            ImageIO.write(blurredImage, imageExtension, blurredFile);
 
             Path relativePathOriginals = pathBuilder.getBaseDirectory().relativize(pathOriginal);
             Path relativePathThumbnails = pathBuilder.getBaseDirectory().relativize(pathThumbnail);
+            Path relativePathBlurred = pathBuilder.getBaseDirectory().relativize(pathBlurred);
 
             return ImageLinkDto.builder()
                     .id(id)
                     .fullSizeUrl("/" + relativePathOriginals)
                     .thumbnailUrl("/" + relativePathThumbnails)
+                    .blurredUrl("/" + relativePathBlurred)
                     .build();
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

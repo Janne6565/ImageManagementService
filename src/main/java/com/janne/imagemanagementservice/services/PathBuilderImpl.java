@@ -15,10 +15,17 @@ public class PathBuilderImpl implements PathBuilder {
     private String baseDirectory;
     @Value("${files.subfolders.thumbnails}")
     private String thumbnailDirectory;
+    @Value("${files.subfolders.blurred}")
+    private String blurredDirectory;
     @Value("${files.subfolders.originals}")
     private String originalDirectory;
     @Value("${files.upload-extension}")
     private String imageExtension;
+
+    @Override
+    public Path buildPathBlurred(String id) {
+        return Path.of(baseDirectory + blurredDirectory + "/" + id + "." + imageExtension);
+    }
 
     @Override
     public Path buildPathThumbnail(String id) {
@@ -41,6 +48,11 @@ public class PathBuilderImpl implements PathBuilder {
     }
 
     @Override
+    public Path getBlurredDirectory() {
+        return Path.of(baseDirectory + blurredDirectory + "/");
+    }
+
+    @Override
     public String getIdFromThumbnailPath(String path) {
         return Arrays.stream(Arrays.stream(path.split("/")).toList().getLast().split("\\.")).toList().getFirst();
     }
@@ -48,6 +60,11 @@ public class PathBuilderImpl implements PathBuilder {
     @Override
     public String getIdFromOriginalPath(String path) {
         return Arrays.stream(Arrays.stream(path.split("/")).toList().getLast().split("\\.")).toList().getFirst();
+    }
+
+    @Override
+    public String getIdFromBlurredPath(String path) {
+        return "";
     }
 
     @Override

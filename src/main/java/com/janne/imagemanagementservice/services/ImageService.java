@@ -28,6 +28,7 @@ public class ImageService {
     public void init() {
         fileService.createDirectory(pathBuilder.getThumbnailDirectory().toString());
         fileService.createDirectory(pathBuilder.getOriginalDirectory().toString());
+        fileService.createDirectory(pathBuilder.getBlurredDirectory().toString());
     }
 
     public void deleteImage(String id) throws FileNotFoundException {
