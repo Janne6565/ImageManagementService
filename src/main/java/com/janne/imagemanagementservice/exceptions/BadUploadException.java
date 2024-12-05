@@ -8,5 +8,5 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BadUploadException extends RuntimeException {
-    private String reason;
+  private String reason;
 }

@@ -15,12 +15,12 @@ import java.util.Date;
 @Entity
 @Table(name = "scaled_images")
 public class ScaledImage {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-    @NotNull
-    private Date uploadedAt;
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    private ImageContentFormat format;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String id;
+  @NotNull
+  private Date uploadedAt;
+  @NotNull
+  @Enumerated(EnumType.STRING)
+  private ImageContentFormat format;
 }

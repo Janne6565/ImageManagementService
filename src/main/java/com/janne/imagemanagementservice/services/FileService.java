@@ -23,167 +23,166 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class FileService {
 
-    private static final Logger log = LoggerFactory.getLogger(FileService.class);
-    private final PathBuilder pathBuilder;
-    private final ImageUtilityService imageUtilityService;
-    @Value("${files.upload-extension}")
-    private String imageExtension;
+  private static final Logger log = LoggerFactory.getLogger(FileService.class);
+  private final PathBuilder pathBuilder;
+  private final ImageUtilityService imageUtilityService;
+  @Value("${files.upload-extension}")
+  private String imageExtension;
 
-    public boolean doesImageExist(String id) throws CorruptedImagesException {
-        Path originalPath = pathBuilder.buildPathOriginal(id);
-        Path thumbnailPath = pathBuilder.buildPathThumbnail(id);
-        boolean originalExists = Files.exists(originalPath) && Files.isRegularFile(originalPath);
-        boolean thumbnailExists = Files.exists(thumbnailPath) && Files.isRegularFile(thumbnailPath);
+  public boolean doesImageExist(String id) throws CorruptedImagesException {
+    Path originalPath = pathBuilder.buildPathOriginal(id);
+    Path thumbnailPath = pathBuilder.buildPathThumbnail(id);
+    boolean originalExists = Files.exists(originalPath) && Files.isRegularFile(originalPath);
+    boolean thumbnailExists = Files.exists(thumbnailPath) && Files.isRegularFile(thumbnailPath);
 
-        if (originalExists && thumbnailExists) {
-            return true;
-        } else {
-            if (originalExists) {
-                throw new CorruptedImagesException("Thumbnail is missing for image with id: " + id);
-            }
-            if (thumbnailExists) {
-                throw new CorruptedImagesException("Original is missing for image with id: " + id);
-            }
-            return false;
-        }
+    if (originalExists && thumbnailExists) {
+      return true;
+    } else {
+      if (originalExists) {
+        throw new CorruptedImagesException("Thumbnail is missing for image with id: " + id);
+      }
+      if (thumbnailExists) {
+        throw new CorruptedImagesException("Original is missing for image with id: " + id);
+      }
+      return false;
+    }
+  }
+
+  public boolean doesDirectoryExist(String path) {
+    return Files.exists(Path.of(path));
+  }
+
+  public void createDirectory(String path) {
+    Path pathToCreate = Path.of(path);
+
+    if (doesDirectoryExist(path)) {
+      return;
     }
 
-    public boolean doesDirectoryExist(String path) {
-        return Files.exists(Path.of(path));
+    try {
+      Files.createDirectories(pathToCreate);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void deleteImage(String id) {
+    Path originalPath = pathBuilder.buildPathOriginal(id);
+    Path thumbnailPath = pathBuilder.buildPathThumbnail(id);
+
+    try {
+      Files.deleteIfExists(originalPath);
+    } catch (IOException e) {
+      log.debug("cant delete original for image: {}", id);
     }
 
-    public void createDirectory(String path) {
-        Path pathToCreate = Path.of(path);
-
-        if (doesDirectoryExist(path)) {
-            return;
-        }
-
-        try {
-            Files.createDirectories(pathToCreate);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    try {
+      Files.deleteIfExists(thumbnailPath);
+    } catch (IOException e) {
+      log.debug("cant delete thumbnail for image: {}", id);
     }
+  }
 
-    public void deleteImage(String id) {
-        Path originalPath = pathBuilder.buildPathOriginal(id);
-        Path thumbnailPath = pathBuilder.buildPathThumbnail(id);
+  private BufferedImage optimizeImage(BufferedImage image) throws IOException {
+    return Thumbnails.of(image)
+      .outputQuality(0.7)
+      .scale(1)
+      .asBufferedImage();
+  }
 
-        try {
-            Files.deleteIfExists(originalPath);
-        } catch (IOException e) {
-            log.debug("cant delete original for image: {}", id);
-        }
+  @SneakyThrows
+  public ImageLinkDto uploadImage(BufferedImage image, String id) {
+    image = optimizeImage(image);
+    Path pathOriginal = pathBuilder.buildPathOriginal(id);
+    Path pathThumbnail = pathBuilder.buildPathThumbnail(id);
+    Path pathBlurred = pathBuilder.buildPathBlurred(id);
 
-        try {
-            Files.deleteIfExists(thumbnailPath);
-        } catch (IOException e) {
-            log.debug("cant delete thumbnail for image: {}", id);
-        }
+    File originalFile = pathOriginal.toFile();
+    File thumbnailFile = pathThumbnail.toFile();
+    File blurredFile = pathBlurred.toFile();
+
+    BufferedImage downscaledImage = imageUtilityService.scaleImage(image, 0.3f);
+    BufferedImage blurredImage = imageUtilityService.scaleImage(image, 0.1f);
+
+    try {
+      assert !originalFile.createNewFile() : "Original file already exists";
+      assert !thumbnailFile.createNewFile() : "Thumbnail file already exists";
+      assert !blurredFile.createNewFile() : "Blurred file already exists";
+
+      ImageIO.write(image, imageExtension, originalFile);
+      ImageIO.write(downscaledImage, imageExtension, thumbnailFile);
+      ImageIO.write(blurredImage, imageExtension, blurredFile);
+
+      Path relativePathOriginals = pathBuilder.getBaseDirectory().relativize(pathOriginal);
+      Path relativePathThumbnails = pathBuilder.getBaseDirectory().relativize(pathThumbnail);
+      Path relativePathBlurred = pathBuilder.getBaseDirectory().relativize(pathBlurred);
+
+      return ImageLinkDto.builder()
+        .id(id)
+        .fullSizeUrl("/" + relativePathOriginals)
+        .thumbnailUrl("/" + relativePathThumbnails)
+        .blurredUrl("/" + relativePathBlurred)
+        .build();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    private BufferedImage optimizeImage(BufferedImage image) throws IOException {
-        return Thumbnails.of(image)
-                .outputQuality(0.7)
-                .scale(1)
-                .asBufferedImage();
+  /**
+   * This methode does not check if the images are valid and just returns all original ImageIds in the directory
+   *
+   * @return List of all IDs from existing Images which could be found in the "original" image directory
+   */
+  public List<String> getAllImageIds() {
+    try {
+      try (Stream<Path> paths = Files.list(pathBuilder.getOriginalDirectory())) {
+        return paths.map(path -> pathBuilder.getIdFromOriginalPath(path.toString()))
+          .toList();
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    @SneakyThrows
-    public ImageLinkDto uploadImage(BufferedImage image, String id) {
-        image = optimizeImage(image);
-        Path pathOriginal = pathBuilder.buildPathOriginal(id);
-        Path pathThumbnail = pathBuilder.buildPathThumbnail(id);
-        Path pathBlurred = pathBuilder.buildPathBlurred(id);
-
-        File originalFile = pathOriginal.toFile();
-        File thumbnailFile = pathThumbnail.toFile();
-        File blurredFile = pathBlurred.toFile();
-
-        BufferedImage downscaledImage = imageUtilityService.scaleImage(image, 0.3f);
-        BufferedImage blurredImage = imageUtilityService.scaleImage(image, 0.1f);
-
-        try {
-            assert !originalFile.createNewFile() : "Original file already exists";
-            assert !thumbnailFile.createNewFile() : "Thumbnail file already exists";
-            assert !blurredFile.createNewFile() : "Blurred file already exists";
-
-            ImageIO.write(image, imageExtension, originalFile);
-            ImageIO.write(downscaledImage, imageExtension, thumbnailFile);
-            ImageIO.write(blurredImage, imageExtension, blurredFile);
-
-            Path relativePathOriginals = pathBuilder.getBaseDirectory().relativize(pathOriginal);
-            Path relativePathThumbnails = pathBuilder.getBaseDirectory().relativize(pathThumbnail);
-            Path relativePathBlurred = pathBuilder.getBaseDirectory().relativize(pathBlurred);
-
-            return ImageLinkDto.builder()
-                    .id(id)
-                    .fullSizeUrl("/" + relativePathOriginals)
-                    .thumbnailUrl("/" + relativePathThumbnails)
-                    .blurredUrl("/" + relativePathBlurred)
-                    .build();
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+  public boolean isImageInvalid(String id) {
+    try {
+      Path originalPath = pathBuilder.buildPathOriginal(id);
+      Path thumbnailPath = pathBuilder.buildPathThumbnail(id);
+      BufferedImage originalImage = ImageIO.read(originalPath.toFile());
+      BufferedImage thumbnailImage = ImageIO.read(thumbnailPath.toFile());
+      return originalImage == null || thumbnailImage == null;
+    } catch (IOException e) {
+      return true;
     }
+  }
 
-    /**
-     * This methode does not check if the images are valid and just returns all original ImageIds in the directory
-     *
-     * @return List of all IDs from existing Images which could be found in the "original" image directory
-     */
-    public List<String> getAllImageIds() {
-        try {
-            try (Stream<Path> paths = Files.list(pathBuilder.getOriginalDirectory())) {
-                return paths.map(path -> pathBuilder.getIdFromOriginalPath(path.toString()))
-                        .toList();
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+  /**
+   * delete all files locally which either:
+   * - don't have an original image
+   * - don't have a thumbnail image
+   * - can't be read as images
+   */
+  public void cleanupFiles() {
+    try {
+      try (Stream<Path> paths = Files.list(pathBuilder.getThumbnailDirectory())) {
+        paths.forEach(path -> {
+          String id = pathBuilder.getIdFromThumbnailPath(path.toString());
+          if (isImageInvalid(id)) {
+            deleteImage(id);
+          }
+        });
+      }
+
+      try (Stream<Path> paths = Files.list(pathBuilder.getOriginalDirectory())) {
+        paths.forEach(path -> {
+          String id = pathBuilder.getIdFromOriginalPath(path.toString());
+          if (isImageInvalid(id)) {
+            deleteImage(id);
+          }
+        });
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-
-    public boolean isImageInvalid(String id) {
-        try {
-            Path originalPath = pathBuilder.buildPathOriginal(id);
-            Path thumbnailPath = pathBuilder.buildPathThumbnail(id);
-            BufferedImage originalImage = ImageIO.read(originalPath.toFile());
-            BufferedImage thumbnailImage = ImageIO.read(thumbnailPath.toFile());
-            return originalImage == null || thumbnailImage == null;
-        } catch (IOException e) {
-            return true;
-        }
-    }
-
-    /**
-     * delete all files locally which either:
-     * - don't have an original image
-     * - don't have a thumbnail image
-     * - can't be read as images
-     */
-    public void cleanupFiles() {
-        try {
-            try (Stream<Path> paths = Files.list(pathBuilder.getThumbnailDirectory())) {
-                paths.forEach(path -> {
-                    String id = pathBuilder.getIdFromThumbnailPath(path.toString());
-                    if (isImageInvalid(id)) {
-                        deleteImage(id);
-                    }
-                });
-            }
-
-            try (Stream<Path> paths = Files.list(pathBuilder.getOriginalDirectory())) {
-                paths.forEach(path -> {
-                    String id = pathBuilder.getIdFromOriginalPath(path.toString());
-                    if (isImageInvalid(id)) {
-                        deleteImage(id);
-                    }
-                });
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+  }
 }

@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RequestException extends RuntimeException {
-    private String reason;
-    private int code;
-    private String message;
+  private String reason;
+  private int code;
+  private String message;
 }

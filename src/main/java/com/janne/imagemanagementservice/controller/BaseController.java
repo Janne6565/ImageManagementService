@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class BaseController {
 
-    @GetMapping("/")
-    public ResponseEntity<String> getBase() {
-        return ResponseEntity.ok("Hello World!");
-    }
+  @GetMapping("/")
+  public ResponseEntity<String> getBase() {
+    return ResponseEntity.ok("Hello World!");
+  }
 }

@@ -8,8 +8,8 @@ import javax.imageio.ImageIO;
 @Configuration
 public class ImageIOConfig {
 
-    @PostConstruct
-    public void init() {
-        ImageIO.scanForPlugins();
-    }
+  @PostConstruct
+  public void init() {
+    ImageIO.scanForPlugins();
+  }
 }

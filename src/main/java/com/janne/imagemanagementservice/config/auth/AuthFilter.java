@@ -21,32 +21,32 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class AuthFilter extends OncePerRequestFilter {
 
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    @Value("${authorization.tokenHash}")
-    private String tokenHash;
+  private final BCryptPasswordEncoder bCryptPasswordEncoder;
+  @Value("${authorization.tokenHash}")
+  private String tokenHash;
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
-            return;
-        }
-
-        String token = authHeader.substring(7);
-        if (!bCryptPasswordEncoder.matches(token, tokenHash)) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
-            return;
-        }
-
-        UserDetails userDetails = User.withUsername("user")
-                .password("") // No password required as we're using token-based auth
-                .authorities(Collections.emptyList()) // Add roles or authorities if needed
-                .build();
-
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        filterChain.doFilter(request, response);
+  @Override
+  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    String authHeader = request.getHeader("Authorization");
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
+      return;
     }
+
+    String token = authHeader.substring(7);
+    if (!bCryptPasswordEncoder.matches(token, tokenHash)) {
+      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+      return;
+    }
+
+    UserDetails userDetails = User.withUsername("user")
+      .password("") // No password required as we're using token-based auth
+      .authorities(Collections.emptyList()) // Add roles or authorities if needed
+      .build();
+
+    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+    filterChain.doFilter(request, response);
+  }
 }

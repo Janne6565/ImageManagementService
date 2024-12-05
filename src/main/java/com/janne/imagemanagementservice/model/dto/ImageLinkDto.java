@@ -11,9 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ImageLinkDto {
-    private String id;
-    private String fullSizeUrl;
-    private String thumbnailUrl;
-    private String blurredUrl;
-    private ImageContentFormat format;
+  private String id;
+  private String fullSizeUrl;
+  private String thumbnailUrl;
+  private String blurredUrl;
+  private ImageContentFormat format;
 }

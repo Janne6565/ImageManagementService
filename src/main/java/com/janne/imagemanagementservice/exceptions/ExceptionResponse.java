@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ExceptionResponse {
-    private String reason;
-    private int code;
-    private String message;
+  private String reason;
+  private int code;
+  private String message;
 }

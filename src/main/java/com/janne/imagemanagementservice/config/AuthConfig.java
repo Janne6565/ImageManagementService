@@ -11,15 +11,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class AuthConfig {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthFilter authFilter) throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry ->
-                        authorizationManagerRequestMatcherRegistry
-                                .anyRequest().authenticated()
-                )
-                .build();
-    }
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthFilter authFilter) throws Exception {
+    return http
+      .csrf(AbstractHttpConfigurer::disable)
+      .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
+      .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry ->
+        authorizationManagerRequestMatcherRegistry
+          .anyRequest().authenticated()
+      )
+      .build();
+  }
 }

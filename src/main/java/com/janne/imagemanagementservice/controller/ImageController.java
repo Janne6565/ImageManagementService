@@ -21,42 +21,42 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class ImageController {
 
-    private final ImageService imageService;
-    private final ImageValidationService imageValidationService;
+  private final ImageService imageService;
+  private final ImageValidationService imageValidationService;
 
-    @PostMapping
-    public ResponseEntity<ImageLinkDto> uploadImage(@RequestParam("image") MultipartFile file, @RequestParam("format") ImageContentFormat format) {
-        imageValidationService.validateImage(file);
-        try {
-            BufferedImage image = ImageIO.read(file.getInputStream());
-            return ResponseEntity.ok(imageService.uploadImage(image, format));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+  @PostMapping
+  public ResponseEntity<ImageLinkDto> uploadImage(@RequestParam("image") MultipartFile file, @RequestParam("format") ImageContentFormat format) {
+    imageValidationService.validateImage(file);
+    try {
+      BufferedImage image = ImageIO.read(file.getInputStream());
+      return ResponseEntity.ok(imageService.uploadImage(image, format));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ImageLinkDto> getImage(@PathVariable String id) {
-        if (!imageService.doesImageExist(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(imageService.getImage(id));
+  @GetMapping("/{id}")
+  public ResponseEntity<ImageLinkDto> getImage(@PathVariable String id) {
+    if (!imageService.doesImageExist(id)) {
+      return ResponseEntity.notFound().build();
     }
+    return ResponseEntity.ok(imageService.getImage(id));
+  }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteImage(@PathVariable String id) {
-        if (!imageService.doesImageExist(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        try {
-            imageService.deleteImage(id);
-            return ResponseEntity.ok(id);
-        } catch (FileNotFoundException e) {
-            throw RequestException.builder()
-                    .code(HttpStatus.NOT_FOUND.value())
-                    .message("Requested image not found")
-                    .reason("No image with id: " + id)
-                    .build();
-        }
+  @DeleteMapping("/{id}")
+  public ResponseEntity<String> deleteImage(@PathVariable String id) {
+    if (!imageService.doesImageExist(id)) {
+      return ResponseEntity.notFound().build();
     }
+    try {
+      imageService.deleteImage(id);
+      return ResponseEntity.ok(id);
+    } catch (FileNotFoundException e) {
+      throw RequestException.builder()
+        .code(HttpStatus.NOT_FOUND.value())
+        .message("Requested image not found")
+        .reason("No image with id: " + id)
+        .build();
+    }
+  }
 }
